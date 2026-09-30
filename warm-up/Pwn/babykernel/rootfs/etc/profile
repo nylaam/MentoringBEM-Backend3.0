@@ -1,3 +1,0 @@
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin
-export TERM=dumb
-alias ll='ls -la'
