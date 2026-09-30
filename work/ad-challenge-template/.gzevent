@@ -1,0 +1,13 @@
+title: "COSMOS 2026 Attack & Defense"
+summary: "Manage by POROS FILKOM"
+start: "2026-10-01T08:00:00Z"
+end: "2026-10-12T16:00:00Z"
+hidden: true
+acceptWithoutReview: false
+teamMemberCountLimit: 4
+ad:
+  tickSeconds: 120              # Durasi 1 round / tick dalam detik (misal 2 menit)
+  flagLifetimeTicks: 3          # Masa berlaku flag (misal 3 round)
+  warmupSeconds: 0              # Masa pemanasan sebelum round 1 (misal 5 menit)
+  resetCooldownMinutes: 10      # Cooldown jika tim mereset vulnbox mereka
+  allowSnapshotDownload: false  # Izinkan tim mendownload snapshot vulnbox

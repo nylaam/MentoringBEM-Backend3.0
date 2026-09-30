@@ -1,0 +1,26 @@
+name: "Secure Vault"
+author: "dimas"
+type: "AttackDefense"           # Wajib "AttackDefense"
+category: "Pwn"
+description: |
+  Layani request vault dan amankan data nasabah.
+  Endpoint service: `nc <team-ip> 9000`
+
+# Konfigurasi container service vulnbox peserta
+container:
+  exposePort: 9000              # Port service yang dibuka ke jaringan A&D
+  memoryLimit: 512              # Batas RAM dalam MB
+  cpuCount: 1                   # Batas CPU core
+  storageLimit: 1024            # Batas Storage dalam MB
+  # Jika containerImage dikosongkan, RSCTF akan otomatis mem-build Dockerfile dari folder src/
+  # containerImage: "ghcr.io/myorg/secure-vault:latest"
+
+# Konfigurasi spesifik Attack & Defense
+ad:
+  allowEgress: false            # false = blokir koneksi keluar dari vulnbox (rekomendasi keamanan)
+  allowSelfReset: true          # Izinkan peserta mereset instance vulnbox mereka via dashboard
+  sshRequiresFlag: false        # Akses SSH tidak memerlukan flag
+  selfHosted: false             # false = di-host di infrastruktur platform (bukan BYOC)
+
+# File yang disediakan untuk di-download peserta
+provide: "dist/vault.zip"
