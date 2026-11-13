@@ -136,3 +136,59 @@ func (r *orderRepository) FindAll(ctx context.Context) ([]*entity.Order, error) 
 	}
 	return list, nil
 }
+
+func (r *orderRepository) Update(ctx context.Context, o *entity.Order) error {
+	if r.db == nil {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		if _, exists := r.inMemDB[o.ID]; !exists {
+			return errx.ErrOrderNotFound
+		}
+		cp := *o
+		cpItems := make([]entity.OrderItem, len(o.Items))
+		copy(cpItems, o.Items)
+		cp.Items = cpItems
+		r.inMemDB[o.ID] = &cp
+		return nil
+	}
+
+	query := `UPDATE orders SET status = $1, customer_name = $2, updated_at = $3 WHERE id = $4`
+	res, err := r.db.ExecContext(ctx, query, string(o.Status), o.CustomerName, o.UpdatedAt, o.ID)
+	if err != nil {
+		return fmt.Errorf("gagal update order: %w", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return errx.ErrOrderNotFound
+	}
+	return nil
+}
+
+func (r *orderRepository) Delete(ctx context.Context, id string) error {
+	if r.db == nil {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		if _, exists := r.inMemDB[id]; !exists {
+			return errx.ErrOrderNotFound
+		}
+		delete(r.inMemDB, id)
+		return nil
+	}
+
+	query := `DELETE FROM orders WHERE id = $1`
+	res, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("gagal menghapus order: %w", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return errx.ErrOrderNotFound
+	}
+	return nil
+}

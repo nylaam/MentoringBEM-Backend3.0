@@ -7,4 +7,6 @@ func RegisterRoutes(router fiber.Router, handler *ProductHandler) {
 	products.Post("/", handler.Create)
 	products.Get("/", handler.GetAll)
 	products.Get("/:id", handler.GetByID)
+	products.Put("/:id", handler.Update)
+	products.Delete("/:id", handler.Delete)
 }

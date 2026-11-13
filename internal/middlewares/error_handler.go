@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"errors"
+	stderrs "errors"
 	"net/http"
 
 	"github.com/gofiber/fiber/v3"
@@ -17,8 +17,7 @@ func CustomErrorHandler(c fiber.Ctx, err error) error {
 	errorCode := "INTERNAL_SERVER_ERROR"
 	errorMessage := "Terjadi kesalahan internal server"
 
-	var domainErr *errx.DomainError
-	if errors.As(err, &domainErr) {
+	if domainErr, ok := errx.As(err); ok {
 		errorCode = domainErr.Code
 		errorMessage = domainErr.Message
 
@@ -36,7 +35,7 @@ func CustomErrorHandler(c fiber.Ctx, err error) error {
 		}
 	} else {
 		var fiberErr *fiber.Error
-		if errors.As(err, &fiberErr) {
+		if stderrs.As(err, &fiberErr) {
 			statusCode = fiberErr.Code
 			errorCode = http.StatusText(fiberErr.Code)
 			errorMessage = fiberErr.Message

@@ -34,27 +34,27 @@ be-mentoring/
 │   │   ├── product_dto.go
 │   │   └── response_dto.go
 │   ├── entity/                  # Business Logic & Invariants
-│   │   ├── order.go             # [HANDS-ON STEP 1.2 LOGIC]
-│   │   └── product.go
+│   │   ├── order.go             # Entity Order (Contoh Implementasi Lengkap)
+│   │   └── product.go           # [HANDS-ON STEP 1 LOGIC] Invariant Produk
 │   ├── enums/                   # Status Enums (PENDING, PAID, dll.)
 │   │   └── order_status.go
-│   └── errx/                    # Domain Errors terisolasi per entity (Slide 13)
-│       ├── errx.go              # Base DomainError & ErrorKind
-│       ├── order_errx.go        # [HANDS-ON STEP 1.1 LOGIC] Error Order
-│       └── product_errx.go      # Error Product
+│   └── errors/                  # Domain Errors terisolasi per entity (Slide 13)
+│       ├── errors.go            # Base DomainError & ErrorKind
+│       ├── order_errors.go      # Error Order
+│       └── product_errors.go    # Error Produk
 ├── helpers/                     # Shared Utility Helpers
 │   └── pagination/
 │       └── pagination.go        # Helper Pagination (Page, Limit, Offset)
 ├── internal/
 │   ├── app/                     # Modul Fitur Aplikasi
-│   │   ├── order/
-│   │   │   ├── handler.go       # [HANDS-ON STEP 3 LOGIC] Delivery Layer (Fiber v3 HTTP Handler)
+│   │   ├── order/               # Fitur Order (Contoh Implementasi Lengkap / Reference)
+│   │   │   ├── handler.go       # Fiber v3 HTTP Handler
 │   │   │   ├── routes.go        # HTTP Route Binding
-│   │   │   └── service.go       # [HANDS-ON STEP 2 LOGIC] Use Case Service
-│   │   └── product/             # Fitur Produk (Contoh Implementasi Lengkap)
-│   │       ├── handler.go
-│   │       ├── routes.go
-│   │       └── service.go
+│   │   │   └── service.go       # Use Case Service
+│   │   └── product/             # Fitur Produk [HANDS-ON CRUD UTAMA]
+│   │       ├── handler.go       # [HANDS-ON STEP 3 LOGIC] Delivery Layer
+│   │       ├── routes.go        # HTTP Route Binding
+│   │       └── service.go       # [HANDS-ON STEP 2 LOGIC] Use Case Service
 │   ├── config/
 │   │   └── config.go            # 12-Factor App Configuration (.env)
 │   ├── infra/                   # Infrastructure Layer
@@ -85,10 +85,13 @@ be-mentoring/
 │       └── validator.go         # Request body payload validator
 ├── tests/                       # Semua File Test Terpusat di tests/unit
 │   └── unit/
-│       ├── order_entity_test.go # Test Table-Driven Domain Invariant
-│       ├── order_service_test.go# Test Mock Repository & Service
-│       ├── order_handler_test.go# Test HTTP Delivery Layer / Controller
-│       └── pagination_test.go   # Test Pagination Helper
+│       ├── product_entity_test.go # [HANDS-ON] Test Domain Invariant Produk
+│       ├── product_service_test.go# [HANDS-ON] Test Mock Repository & Service Produk
+│       ├── product_handler_test.go# [HANDS-ON] Test Controller / Delivery Produk
+│       ├── order_entity_test.go   # Test Reference Order Entity
+│       ├── order_service_test.go  # Test Reference Order Service
+│       ├── order_handler_test.go  # Test Reference Order Handler
+│       └── pagination_test.go     # Test Pagination Helper
 ├── .env.example
 ├── Dockerfile                   # Multi-stage minimal production image
 ├── docker-compose.yml           # PostgreSQL + API container stack
@@ -99,16 +102,22 @@ be-mentoring/
 
 ---
 
-## 🎯 Fokus Hands-on Lab: Business Logic
+## 🎯 Fokus Hands-on Lab: Product CRUD
 
-Pada hands-on ini, **seluruh unit test di folder `tests/unit/` sudah disediakan lengkap dan siap jalan**. Tugas peserta adalah **berfokus mengimplementasikan Logika Bisnis** di file yang bertanda **`// TODO`**:
+Hands-on mentoring ini berfokus pada **Product CRUD** dengan alur Clean Architecture (Domain Entity ➔ Service Use Case ➔ Delivery Controller). Fitur Order disediakan sebagai contoh implementasi lengkap (*reference architecture*).
 
-| Step | File | Tugas Logika Bisnis |
+Tugas peserta adalah menyelesaikan bagian bertanda **`// TODO`**:
+
+| Step | File | Tugas Hands-on Product CRUD |
 | :--- | :--- | :--- |
-| **Step 1.1** | [`domain/errx/order_errx.go`](file:///D:/Kuliah/be-mentoring/domain/errx/order_errx.go) | **Domain Error**: Definisikan `ErrOrderLimitExceeded` dengan code `"LIMIT_EXCEEDED"`. |
-| **Step 1.2** | [`domain/entity/order.go`](file:///D:/Kuliah/be-mentoring/domain/entity/order.go) | **Domain Invariant**: Validasi total order tidak boleh melebihi Rp 50.000.000 (`MaxOrderTotal`). Jika melebihi, return `errx.ErrOrderLimitExceeded`. |
-| **Step 2** | [`internal/app/order/service.go`](file:///D:/Kuliah/be-mentoring/internal/app/order/service.go) | **Service Orchestration**: Panggil `entity.NewOrder` dan simpan order via `s.orderRepo.Save`. |
-| **Step 3** | [`internal/app/order/handler.go`](file:///D:/Kuliah/be-mentoring/internal/app/order/handler.go) | **Delivery Layer (Controller)**: Binding request body JSON, validasi request DTO, panggil service `CreateOrder`, dan return HTTP response 201 Created. |
+| **Step 1.1** | [`domain/entity/product.go`](file:///D:/Kuliah/be-mentoring/domain/entity/product.go) | **Domain Invariant `NewProduct`**: Validasi nama minimal 3 karakter, harga > 0, dan stok >= 0. |
+| **Step 1.2** | [`domain/entity/product.go`](file:///D:/Kuliah/be-mentoring/domain/entity/product.go) | **Domain Invariant `Update`**: Validasi perubahan nama, harga, stok, serta perbarui `UpdatedAt`. |
+| **Step 2.1** | [`internal/app/product/service.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/service.go) | **Use Case `CreateProduct`**: Panggil `entity.NewProduct` dan simpan via `s.repo.Save`. |
+| **Step 2.2** | [`internal/app/product/service.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/service.go) | **Use Case `UpdateProduct`**: Ambil produk via `s.repo.FindByID`, jalankan `p.Update(...)`, simpan via `s.repo.Update`. |
+| **Step 2.3** | [`internal/app/product/service.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/service.go) | **Use Case `DeleteProduct`**: Cek keberadaan produk dan hapus via `s.repo.Delete`. |
+| **Step 3.1** | [`internal/app/product/handler.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/handler.go) | **Controller (POST /products)**: Binding JSON, validasi request DTO, panggil service `CreateProduct`, return 201 Created. |
+| **Step 3.2** | [`internal/app/product/handler.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/handler.go) | **Controller (PUT /products/:id)**: Ambil param `id`, bind & validasi `UpdateProductRequest`, panggil `UpdateProduct`, return 200 OK. |
+| **Step 3.3** | [`internal/app/product/handler.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/handler.go) | **Controller (DELETE /products/:id)**: Ambil param `id`, panggil `DeleteProduct`, return 200 OK dengan pesan sukses. |
 
 > 💡 **Kunci Jawaban:**
 > Solusi kode untuk setiap `// TODO` tersedia lengkap di file [`answer.md`](file:///D:/Kuliah/be-mentoring/answer.md).
@@ -124,7 +133,7 @@ go test ./tests/unit/... -v -cover
 ```
 *(Catatan: Tambahkan flag `-race` jika dijalankan di environment Linux atau Docker dengan CGO aktif)*
 
-- **Sebelum `// TODO` dikerjakan:** Test invariant limit belanja dan create order akan gagal (FAIL) dan memberi petunjuk jelas apa yang belum selesai.
+- **Sebelum `// TODO` dikerjakan:** Test Product CRUD akan gagal (FAIL) dan memberi petunjuk jelas apa yang belum selesai.
 - **Setelah `// TODO` diselesaikan:** Seluruh pengujian akan lulus 100% (PASS) dalam hitungan milidetik tanpa membutuhkan database!
 
 ---
@@ -149,7 +158,7 @@ Akses di browser / Postman / cURL:
 # 1. Nyalakan PostgreSQL
 docker compose up -d
 
-# 2. Jalankan migrasi tabel per entity secara berurutan
+# 2. Jalankan migrasi tabel
 go run ./cmd/migrate
 
 # (Opsional: rollback semua migrasi)

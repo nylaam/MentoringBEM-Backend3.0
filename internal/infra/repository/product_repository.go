@@ -143,3 +143,56 @@ func (r *productRepository) UpdateStock(ctx context.Context, id string, quantity
 	}
 	return nil
 }
+
+func (r *productRepository) Update(ctx context.Context, p *entity.Product) error {
+	if r.db == nil {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		if _, exists := r.inMemDB[p.ID]; !exists {
+			return errx.ErrProductNotFound
+		}
+		cp := *p
+		r.inMemDB[p.ID] = &cp
+		return nil
+	}
+
+	query := `UPDATE products SET name = $1, price = $2, stock = $3, updated_at = $4 WHERE id = $5`
+	res, err := r.db.ExecContext(ctx, query, p.Name, p.Price, p.Stock, p.UpdatedAt, p.ID)
+	if err != nil {
+		return fmt.Errorf("gagal update produk: %w", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return errx.ErrProductNotFound
+	}
+	return nil
+}
+
+func (r *productRepository) Delete(ctx context.Context, id string) error {
+	if r.db == nil {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		if _, exists := r.inMemDB[id]; !exists {
+			return errx.ErrProductNotFound
+		}
+		delete(r.inMemDB, id)
+		return nil
+	}
+
+	query := `DELETE FROM products WHERE id = $1`
+	res, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("gagal menghapus produk: %w", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return errx.ErrProductNotFound
+	}
+	return nil
+}

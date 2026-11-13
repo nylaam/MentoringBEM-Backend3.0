@@ -30,7 +30,7 @@ type Order struct {
 	UpdatedAt    time.Time         `json:"updated_at"`
 }
 
-// NewOrder adalah Domain Entity Constructor yang menjaga invariant aturan bisnis.
+// NewOrder adalah Domain Entity Constructor yang menjaga invariant aturan bisnis pesanan.
 func NewOrder(customerID, customerName string, items []OrderItem) (*Order, error) {
 	if len(items) == 0 {
 		return nil, errx.ErrEmptyOrder
@@ -54,19 +54,10 @@ func NewOrder(customerID, customerName string, items []OrderItem) (*Order, error
 		calculatedTotal += subtotal
 	}
 
-	// =========================================================================
-	// TODO [Hands-on Step 1.2]: Validasi Domain Invariant Batas Maksimal Order
-	// =========================================================================
-	// Skenario Lab (Slide 16 & 17 di index.md):
-	// Toko memiliki aturan mutlak: Total nilai pesanan (Order) tidak boleh
-	// melebihi Rp 50.000.000 (MaxOrderTotal).
-	//
-	// Tulis logika validasi di sini:
-	// Jika calculatedTotal > MaxOrderTotal,
-	// kembalikan: nil, errx.ErrOrderLimitExceeded
-	//
-	// (Lihat kunci jawaban lengkap di answer.md)
-	// =========================================================================
+	// Validasi Domain Invariant: Total order tidak boleh melebihi MaxOrderTotal (50 Juta)
+	if calculatedTotal > MaxOrderTotal {
+		return nil, errx.ErrOrderLimitExceeded
+	}
 
 	now := time.Now().UTC()
 	return &Order{
@@ -79,4 +70,14 @@ func NewOrder(customerID, customerName string, items []OrderItem) (*Order, error
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}, nil
+}
+
+// UpdateStatus mengubah status pesanan dan menjaga kevalidan transisi status.
+func (o *Order) UpdateStatus(newStatus enums.OrderStatus) error {
+	if !newStatus.IsValid() {
+		return errx.ErrInvalidStatus
+	}
+	o.Status = newStatus
+	o.UpdatedAt = time.Now().UTC()
+	return nil
 }

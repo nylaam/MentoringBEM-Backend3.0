@@ -27,6 +27,13 @@ func (e *DomainError) Unwrap() error {
 	return e.Err
 }
 
+func (e *DomainError) Is(target error) bool {
+	if t, ok := target.(*DomainError); ok {
+		return e.Code == t.Code
+	}
+	return false
+}
+
 func New(kind ErrorKind, code, message string) *DomainError {
 	return &DomainError{
 		Kind:    kind,

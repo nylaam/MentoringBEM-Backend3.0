@@ -17,6 +17,11 @@ type CreateOrderRequest struct {
 	Items        []CreateOrderItemRequest `json:"items" validate:"required,min=1,dive"`
 }
 
+type UpdateOrderRequest struct {
+	Status       enums.OrderStatus `json:"status" validate:"required"`
+	CustomerName string            `json:"customer_name,omitempty"`
+}
+
 type OrderItemResponse struct {
 	ProductID   string `json:"product_id"`
 	ProductName string `json:"product_name"`

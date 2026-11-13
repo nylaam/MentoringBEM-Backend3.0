@@ -18,16 +18,15 @@ func NewProductService(repo contracts.ProductRepository) contracts.ProductServic
 }
 
 func (s *productService) CreateProduct(ctx context.Context, req dto.CreateProductRequest) (*dto.ProductResponse, error) {
-	prod, err := entity.NewProduct(req.Name, req.Price, req.Stock)
-	if err != nil {
-		return nil, err
-	}
+	// =========================================================================
+	// TODO [Hands-on Step 2.1]: Orkestrasi Domain Constructor & Simpan Produk
+	// =========================================================================
+	// Sesuai Clean Architecture (Use Case):
+	// 1. Panggil constructor entity.NewProduct(req.Name, req.Price, req.Stock):
+	// 2. Simpan produk ke repo via interface contracts.ProductRepository:
+	// 3. Kembalikan response DTO:
 
-	if err := s.repo.Save(ctx, prod); err != nil {
-		return nil, fmt.Errorf("gagal menyimpan produk: %w", err)
-	}
-
-	return toProductResponse(prod), nil
+	return nil, fmt.Errorf("TODO [Hands-on Step 2.1]: implementasikan service CreateProduct")
 }
 
 func (s *productService) GetAllProducts(ctx context.Context) ([]*dto.ProductResponse, error) {
@@ -49,6 +48,29 @@ func (s *productService) GetProductByID(ctx context.Context, id string) (*dto.Pr
 		return nil, err
 	}
 	return toProductResponse(p), nil
+}
+
+func (s *productService) UpdateProduct(ctx context.Context, id string, req dto.UpdateProductRequest) (*dto.ProductResponse, error) {
+	// =========================================================================
+	// TODO [Hands-on Step 2.2]: Use Case Update Produk
+	// =========================================================================
+	// 1. Ambil data produk berdasarkan ID:
+	// 2. Validasi invariant & update field produk via domain entity method:
+	// 3. Simpan perubahan ke repository:
+	// 4. Return response:
+
+	return nil, fmt.Errorf("TODO [Hands-on Step 2.2]: implementasikan service UpdateProduct")
+}
+
+func (s *productService) DeleteProduct(ctx context.Context, id string) error {
+	// =========================================================================
+	// TODO [Hands-on Step 2.3]: Use Case Delete Produk
+	// =========================================================================
+	// 1. Pastikan produk ada di database:
+	// 2. Hapus produk via repository:
+	// 3. Return nil jika sukses
+
+	return fmt.Errorf("TODO [Hands-on Step 2.3]: implementasikan service DeleteProduct")
 }
 
 func toProductResponse(p *entity.Product) *dto.ProductResponse {

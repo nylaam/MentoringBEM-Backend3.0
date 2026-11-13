@@ -2,7 +2,7 @@ package unit_test
 
 import (
 	"context"
-	"errors"
+	stderrs "errors"
 	"testing"
 
 	"github.com/mentoring/toko-backend/domain/dto"
@@ -20,6 +20,8 @@ type mockOrderRepo struct {
 	saveFunc     func(ctx context.Context, o *entity.Order) error
 	findByIDFunc func(ctx context.Context, id string) (*entity.Order, error)
 	findAllFunc  func(ctx context.Context) ([]*entity.Order, error)
+	updateFunc   func(ctx context.Context, o *entity.Order) error
+	deleteFunc   func(ctx context.Context, id string) error
 }
 
 func (m *mockOrderRepo) Save(ctx context.Context, o *entity.Order) error {
@@ -43,10 +45,26 @@ func (m *mockOrderRepo) FindAll(ctx context.Context) ([]*entity.Order, error) {
 	return nil, nil
 }
 
+func (m *mockOrderRepo) Update(ctx context.Context, o *entity.Order) error {
+	if m.updateFunc != nil {
+		return m.updateFunc(ctx, o)
+	}
+	return nil
+}
+
+func (m *mockOrderRepo) Delete(ctx context.Context, id string) error {
+	if m.deleteFunc != nil {
+		return m.deleteFunc(ctx, id)
+	}
+	return nil
+}
+
 type mockProductRepo struct {
 	findByIDFunc    func(ctx context.Context, id string) (*entity.Product, error)
 	findAllFunc     func(ctx context.Context) ([]*entity.Product, error)
 	saveFunc        func(ctx context.Context, p *entity.Product) error
+	updateFunc      func(ctx context.Context, p *entity.Product) error
+	deleteFunc      func(ctx context.Context, id string) error
 	updateStockFunc func(ctx context.Context, id string, change int) error
 }
 
@@ -67,6 +85,20 @@ func (m *mockProductRepo) FindAll(ctx context.Context) ([]*entity.Product, error
 func (m *mockProductRepo) Save(ctx context.Context, p *entity.Product) error {
 	if m.saveFunc != nil {
 		return m.saveFunc(ctx, p)
+	}
+	return nil
+}
+
+func (m *mockProductRepo) Update(ctx context.Context, p *entity.Product) error {
+	if m.updateFunc != nil {
+		return m.updateFunc(ctx, p)
+	}
+	return nil
+}
+
+func (m *mockProductRepo) Delete(ctx context.Context, id string) error {
+	if m.deleteFunc != nil {
+		return m.deleteFunc(ctx, id)
 	}
 	return nil
 }
@@ -165,7 +197,7 @@ func TestOrderService_CreateOrder_RepoError(t *testing.T) {
 
 	mockOrderRepo := &mockOrderRepo{
 		saveFunc: func(ctx context.Context, o *entity.Order) error {
-			return errors.New("database connection timeout")
+			return stderrs.New("database connection timeout")
 		},
 	}
 
@@ -225,4 +257,79 @@ func TestOrderService_CreateOrder_ExceedLimit(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, errx.ErrOrderLimitExceeded)
 	assert.Nil(t, res)
+}
+
+// -----------------------------------------------------------------------------
+// Test 5: Skenario Update Order
+// -----------------------------------------------------------------------------
+func TestOrderService_UpdateOrder(t *testing.T) {
+	existingOrder, err := entity.NewOrder("cust-001", "Budi", []entity.OrderItem{
+		{ProductID: "prod-1", ProductName: "Keyboard", Quantity: 1, UnitPrice: 100_000},
+	})
+	assert.NoError(t, err)
+
+	mockOrderRepo := &mockOrderRepo{
+		findByIDFunc: func(ctx context.Context, id string) (*entity.Order, error) {
+			if id == "not-found" {
+				return nil, errx.ErrOrderNotFound
+			}
+			return existingOrder, nil
+		},
+		updateFunc: func(ctx context.Context, o *entity.Order) error {
+			return nil
+		},
+	}
+
+	svc := order.NewOrderService(mockOrderRepo, &mockProductRepo{})
+
+	// 1. Success update
+	req := dto.UpdateOrderRequest{
+		Status:       "PAID",
+		CustomerName: "Budi Santoso Updated",
+	}
+	res, err := svc.UpdateOrder(context.Background(), "order-1", req)
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.Equal(t, "PAID", string(res.Status))
+	assert.Equal(t, "Budi Santoso Updated", res.CustomerName)
+
+	// 2. Order not found
+	resNotFound, errNotFound := svc.UpdateOrder(context.Background(), "not-found", req)
+	assert.ErrorIs(t, errNotFound, errx.ErrOrderNotFound)
+	assert.Nil(t, resNotFound)
+
+	// 3. Invalid status
+	reqInvalidStatus := dto.UpdateOrderRequest{
+		Status: "INVALID_STATUS",
+	}
+	resInvalid, errInvalid := svc.UpdateOrder(context.Background(), "order-1", reqInvalidStatus)
+	assert.ErrorIs(t, errInvalid, errx.ErrInvalidStatus)
+	assert.Nil(t, resInvalid)
+}
+
+// -----------------------------------------------------------------------------
+// Test 6: Skenario Delete Order
+// -----------------------------------------------------------------------------
+func TestOrderService_DeleteOrder(t *testing.T) {
+	mockOrderRepo := &mockOrderRepo{
+		findByIDFunc: func(ctx context.Context, id string) (*entity.Order, error) {
+			if id == "not-found" {
+				return nil, errx.ErrOrderNotFound
+			}
+			return &entity.Order{ID: id}, nil
+		},
+		deleteFunc: func(ctx context.Context, id string) error {
+			return nil
+		},
+	}
+
+	svc := order.NewOrderService(mockOrderRepo, &mockProductRepo{})
+
+	// 1. Success delete
+	err := svc.DeleteOrder(context.Background(), "order-1")
+	assert.NoError(t, err)
+
+	// 2. Delete not found
+	err = svc.DeleteOrder(context.Background(), "not-found")
+	assert.ErrorIs(t, err, errx.ErrOrderNotFound)
 }

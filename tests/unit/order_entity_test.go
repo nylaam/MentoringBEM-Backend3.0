@@ -73,3 +73,4 @@ func TestNewOrder_Validation(t *testing.T) {
 		})
 	}
 }
+
