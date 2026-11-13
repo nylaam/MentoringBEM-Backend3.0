@@ -1,0 +1,907 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Toko Backend API - Mentoring Hands-on",
+    "description": "Spesifikasi REST API untuk Lab Mentoring Backend Go Fiber v3 (Clean Architecture & DDD). Dapat diimpor langsung ke Apidog atau Postman.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Mentoring Backend Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Lokal Server Pengembangan (Fiber v3)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "System",
+      "description": "Endpoint pemeriksaan kesehatan aplikasi"
+    },
+    {
+      "name": "Products",
+      "description": "Manajemen Produk - Fokus Hands-on Lab Peserta (CRUD)"
+    },
+    {
+      "name": "Orders",
+      "description": "Manajemen Pesanan - Modul Referensi Lengkap (Clean Architecture)"
+    }
+  ],
+  "paths": {
+    "/healthz": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Pemeriksaan Kesehatan Server (Health Check)",
+        "description": "Memastikan instance Go Fiber v3 berjalan dengan normal.",
+        "responses": {
+          "200": {
+            "description": "Server dalam kondisi sehat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "status": "healthy",
+                    "time": "2026-11-13T10:00:00Z",
+                    "version": "1.0.0"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Ambil Seluruh Daftar Produk",
+        "description": "Mengambil list semua produk yang tersedia di katalog toko.",
+        "responses": {
+          "200": {
+            "description": "Daftar produk berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductListResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "id": "prod-001",
+                      "name": "Laptop Gaming ASUS ROG",
+                      "price": 25000000,
+                      "stock": 10,
+                      "created_at": "2026-11-13T06:00:00Z",
+                      "updated_at": "2026-11-13T06:00:00Z"
+                    },
+                    {
+                      "id": "prod-002",
+                      "name": "Mechanical Keyboard",
+                      "price": 1200000,
+                      "stock": 50,
+                      "created_at": "2026-11-13T06:00:00Z",
+                      "updated_at": "2026-11-13T06:00:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Products"],
+        "summary": "Tambah Produk Baru (Hands-on Step 3.1)",
+        "description": "Menambahkan produk baru ke database. Memvalidasi domain invariants (nama minimal 3 karakter, harga > 0, stok >= 0).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequest"
+              },
+              "example": {
+                "name": "Monitor Samsung 24 Inch IPS",
+                "price": 2350000,
+                "stock": 20
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produk berhasil dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductSingleResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "id": "c1f7b022-7728-403d-bc65-75e119d67ef9",
+                    "name": "Monitor Samsung 24 Inch IPS",
+                    "price": 2350000,
+                    "stock": 20,
+                    "created_at": "2026-11-13T06:00:00Z",
+                    "updated_at": "2026-11-13T06:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/api/v1/products/{id}": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Ambil Detail Produk by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID unik produk",
+            "schema": {
+              "type": "string"
+            },
+            "example": "prod-001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail produk ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductSingleResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "id": "prod-001",
+                    "name": "Laptop Gaming ASUS ROG",
+                    "price": 25000000,
+                    "stock": 10,
+                    "created_at": "2026-11-13T06:00:00Z",
+                    "updated_at": "2026-11-13T06:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Products"],
+        "summary": "Update Produk by ID (Hands-on Step 3.2)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID unik produk yang akan diperbarui",
+            "schema": {
+              "type": "string"
+            },
+            "example": "prod-001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductRequest"
+              },
+              "example": {
+                "name": "Laptop Gaming ASUS ROG Scar 16",
+                "price": 27500000,
+                "stock": 8
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Produk berhasil diperbarui",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductSingleResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "id": "prod-001",
+                    "name": "Laptop Gaming ASUS ROG Scar 16",
+                    "price": 27500000,
+                    "stock": 8,
+                    "created_at": "2026-11-13T06:00:00Z",
+                    "updated_at": "2026-11-13T07:15:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Products"],
+        "summary": "Hapus Produk by ID (Hands-on Step 3.3)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID unik produk yang akan dihapus",
+            "schema": {
+              "type": "string"
+            },
+            "example": "prod-001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Produk berhasil dihapus",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "message": "Produk berhasil dihapus"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/api/v1/orders": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Ambil Seluruh Riwayat Pesanan (Reference)",
+        "description": "Mengambil semua pesanan belanja yang tercatat di sistem.",
+        "responses": {
+          "200": {
+            "description": "Daftar pesanan berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderListResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "id": "40a5a228-56eb-46cb-8d81-8ca89a3118ee",
+                      "customer_id": "cust-101",
+                      "customer_name": "Budi Santoso",
+                      "items": [
+                        {
+                          "product_id": "prod-002",
+                          "product_name": "Mechanical Keyboard",
+                          "quantity": 2,
+                          "unit_price": 1200000,
+                          "subtotal": 2400000
+                        }
+                      ],
+                      "total": 2400000,
+                      "status": "PENDING",
+                      "created_at": "2026-11-13T06:00:00Z",
+                      "updated_at": "2026-11-13T06:00:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Buat Pesanan Baru (Reference Module)",
+        "description": "Membuat order baru dengan memvalidasi batas total belanja (MaxOrderTotal Rp 50.000.000).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderRequest"
+              },
+              "example": {
+                "customer_id": "cust-101",
+                "customer_name": "Budi Santoso",
+                "items": [
+                  {
+                    "product_id": "prod-002",
+                    "quantity": 2
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pesanan berhasil dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderSingleResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "id": "40a5a228-56eb-46cb-8d81-8ca89a3118ee",
+                    "customer_id": "cust-101",
+                    "customer_name": "Budi Santoso",
+                    "items": [
+                      {
+                        "product_id": "prod-002",
+                        "product_name": "Mechanical Keyboard",
+                        "quantity": 2,
+                        "unit_price": 1200000,
+                        "subtotal": 2400000
+                      }
+                    ],
+                    "total": 2400000,
+                    "status": "PENDING",
+                    "created_at": "2026-11-13T06:00:00Z",
+                    "updated_at": "2026-11-13T06:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{id}": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Ambil Detail Pesanan by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID unik pesanan",
+            "schema": {
+              "type": "string"
+            },
+            "example": "40a5a228-56eb-46cb-8d81-8ca89a3118ee"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail pesanan ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderSingleResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Orders"],
+        "summary": "Update Status Pesanan by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID pesanan yang akan diupdate",
+            "schema": {
+              "type": "string"
+            },
+            "example": "40a5a228-56eb-46cb-8d81-8ca89a3118ee"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrderRequest"
+              },
+              "example": {
+                "status": "PAID",
+                "customer_name": "Budi Santoso (Updated)"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status pesanan berhasil diperbarui",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderSingleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Orders"],
+        "summary": "Hapus Pesanan by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID pesanan yang akan dihapus",
+            "schema": {
+              "type": "string"
+            },
+            "example": "40a5a228-56eb-46cb-8d81-8ca89a3118ee"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pesanan berhasil dihapus",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "message": "Pesanan berhasil dihapus"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateProductRequest": {
+        "type": "object",
+        "required": ["name", "price", "stock"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "description": "Nama produk minimal 3 karakter",
+            "example": "Monitor Samsung 24 Inch IPS"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "description": "Harga produk dalam satuan Rupiah (harus > 0)",
+            "example": 2350000
+          },
+          "stock": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Jumlah ketersediaan stok produk (harus >= 0)",
+            "example": 20
+          }
+        }
+      },
+      "UpdateProductRequest": {
+        "type": "object",
+        "required": ["name", "price", "stock"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "description": "Nama produk baru",
+            "example": "Laptop Gaming ASUS ROG Scar 16"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "description": "Harga baru produk",
+            "example": 27500000
+          },
+          "stock": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Stok baru produk",
+            "example": 8
+          }
+        }
+      },
+      "ProductItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "prod-001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Laptop Gaming ASUS ROG"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64",
+            "example": 25000000
+          },
+          "stock": {
+            "type": "integer",
+            "example": 10
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProductSingleResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProductItem"
+          }
+        }
+      },
+      "ProductListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductItem"
+            }
+          }
+        }
+      },
+      "CreateOrderItem": {
+        "type": "object",
+        "required": ["product_id", "quantity"],
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "ID unik produk yang dipesan",
+            "example": "prod-002"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Jumlah barang yang dibeli (harus > 0)",
+            "example": 2
+          }
+        }
+      },
+      "CreateOrderRequest": {
+        "type": "object",
+        "required": ["customer_id", "customer_name", "items"],
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "example": "cust-101"
+          },
+          "customer_name": {
+            "type": "string",
+            "example": "Budi Santoso"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/CreateOrderItem"
+            }
+          }
+        }
+      },
+      "UpdateOrderRequest": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "PAID", "SHIPPED", "CANCELLED"],
+            "example": "PAID"
+          },
+          "customer_name": {
+            "type": "string",
+            "example": "Budi Santoso (Updated)"
+          }
+        }
+      },
+      "OrderItemResponse": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "example": "prod-002"
+          },
+          "product_name": {
+            "type": "string",
+            "example": "Mechanical Keyboard"
+          },
+          "quantity": {
+            "type": "integer",
+            "example": 2
+          },
+          "unit_price": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1200000
+          },
+          "subtotal": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2400000
+          }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "40a5a228-56eb-46cb-8d81-8ca89a3118ee"
+          },
+          "customer_id": {
+            "type": "string",
+            "example": "cust-101"
+          },
+          "customer_name": {
+            "type": "string",
+            "example": "Budi Santoso"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2400000
+          },
+          "status": {
+            "type": "string",
+            "example": "PENDING"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "OrderSingleResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/OrderItem"
+          }
+        }
+      },
+      "OrderListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItem"
+            }
+          }
+        }
+      },
+      "HealthCheckResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "healthy"
+              },
+              "time": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              }
+            }
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Operasi berhasil"
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "example": "PRODUCT_NOT_FOUND"
+              },
+              "message": {
+                "type": "string",
+                "example": "produk tidak ditemukan"
+              },
+              "request_id": {
+                "type": "string",
+                "example": "9a38f38d-8a58-450f-a720-3ce4802c1db8"
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequestError": {
+        "description": "Bad Request - Format request tidak valid (contoh: JSON malformed)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": "Bad Request",
+                "message": "Format JSON tidak valid",
+                "request_id": "42616aef-b0a7-47b2-bd77-a8b27341ad6c"
+              }
+            }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "Not Found - Resource tidak ditemukan",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": "PRODUCT_NOT_FOUND",
+                "message": "produk tidak ditemukan",
+                "request_id": "89e5a1b3-5683-4217-a02d-02195f22384a"
+              }
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Unprocessable Entity - Pelanggaran aturan invariant domain atau validasi request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": "INVALID_NAME",
+                "message": "nama produk minimal harus 3 karakter",
+                "request_id": "c1a6b043-4cb2-475a-a387-99cf1600f1ce"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

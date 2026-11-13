@@ -4,6 +4,9 @@ Dokumentasi endpoint REST API resmi untuk studi kasus **Toko Backend Mentoring**
 
 - **Base URL:** `http://localhost:8080`
 - **Content-Type:** `application/json`
+- **File Import Apidog & Postman:**
+  - [docs/openapi.json](file:///D:/Kuliah/be-mentoring/docs/openapi.json) (OpenAPI 3.0.3 Specification dengan schema data)
+  - [docs/apidog_collection.json](file:///D:/Kuliah/be-mentoring/docs/apidog_collection.json) (Collection siap pakai + variabel environment)
 
 ---
 
