@@ -119,9 +119,6 @@ Tugas peserta adalah menyelesaikan bagian bertanda **`// TODO`**:
 | **Step 3.2** | [`internal/app/product/handler.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/handler.go) | **Controller (PUT /products/:id)**: Ambil param `id`, bind & validasi `UpdateProductRequest`, panggil `UpdateProduct`, return 200 OK. |
 | **Step 3.3** | [`internal/app/product/handler.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/handler.go) | **Controller (DELETE /products/:id)**: Ambil param `id`, panggil `DeleteProduct`, return 200 OK dengan pesan sukses. |
 
-> 💡 **Kunci Jawaban:**
-> Solusi kode untuk setiap `// TODO` tersedia lengkap di file [`answer.md`](file:///D:/Kuliah/be-mentoring/answer.md).
-
 ---
 
 ## 🧪 Menguji Logika dengan Unit Test
