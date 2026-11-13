@@ -1,0 +1,14 @@
+.env
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+tmp/
+dist/
+.DS_Store
+index.md
+answer.md
