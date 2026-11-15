@@ -106,3 +106,89 @@ func TestProduct_Update(t *testing.T) {
 	err = p.Update("Monitor Gaming Baru", 2_500_000, -5)
 	assert.ErrorIs(t, err, errx.ErrInvalidProductStock)
 }
+
+func TestProduct_Patch(t *testing.T) {
+	createBaseProduct := func() *entity.Product {
+		return &entity.Product{
+			ID:        "prod-patch-1",
+			Name:      "Mouse Wireless",
+			Price:     350_000,
+			Stock:     20,
+			CreatedAt: time.Now().Add(-1 * time.Hour),
+			UpdatedAt: time.Now().Add(-1 * time.Hour),
+		}
+	}
+
+	t.Run("Patch Hanya Stok (Stock Adjustment)", func(t *testing.T) {
+		p := createBaseProduct()
+		newStock := 50
+
+		err := p.Patch(nil, nil, &newStock)
+		assert.NoError(t, err)
+		assert.Equal(t, 50, p.Stock)
+		assert.Equal(t, "Mouse Wireless", p.Name)
+		assert.Equal(t, int64(350_000), p.Price)
+	})
+
+	t.Run("Patch Hanya Harga (Price Update)", func(t *testing.T) {
+		p := createBaseProduct()
+		newPrice := int64(299_000)
+
+		err := p.Patch(nil, &newPrice, nil)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(299_000), p.Price)
+		assert.Equal(t, 20, p.Stock)
+		assert.Equal(t, "Mouse Wireless", p.Name)
+	})
+
+	t.Run("Patch Hanya Nama Produk", func(t *testing.T) {
+		p := createBaseProduct()
+		newName := "Mouse Wireless Ergonomic Pro"
+
+		err := p.Patch(&newName, nil, nil)
+		assert.NoError(t, err)
+		assert.Equal(t, "Mouse Wireless Ergonomic Pro", p.Name)
+		assert.Equal(t, int64(350_000), p.Price)
+		assert.Equal(t, 20, p.Stock)
+	})
+
+	t.Run("Patch Semua Field Sekaligus", func(t *testing.T) {
+		p := createBaseProduct()
+		newName := "Mouse Wireless RGB"
+		newPrice := int64(450_000)
+		newStock := 100
+
+		err := p.Patch(&newName, &newPrice, &newStock)
+		assert.NoError(t, err)
+		assert.Equal(t, "Mouse Wireless RGB", p.Name)
+		assert.Equal(t, int64(450_000), p.Price)
+		assert.Equal(t, 100, p.Stock)
+	})
+
+	t.Run("Gagal Jika Tidak Ada Field Yang Diisi", func(t *testing.T) {
+		p := createBaseProduct()
+		err := p.Patch(nil, nil, nil)
+		assert.ErrorIs(t, err, errx.ErrNoFieldsToUpdate)
+	})
+
+	t.Run("Gagal Jika Nama Invalid Pada Patch", func(t *testing.T) {
+		p := createBaseProduct()
+		invalidName := "AB"
+		err := p.Patch(&invalidName, nil, nil)
+		assert.ErrorIs(t, err, errx.ErrInvalidProductName)
+	})
+
+	t.Run("Gagal Jika Harga Invalid Pada Patch", func(t *testing.T) {
+		p := createBaseProduct()
+		invalidPrice := int64(-500)
+		err := p.Patch(nil, &invalidPrice, nil)
+		assert.ErrorIs(t, err, errx.ErrInvalidProductPrice)
+	})
+
+	t.Run("Gagal Jika Stok Negatif Pada Patch", func(t *testing.T) {
+		p := createBaseProduct()
+		invalidStock := -10
+		err := p.Patch(nil, nil, &invalidStock)
+		assert.ErrorIs(t, err, errx.ErrInvalidProductStock)
+	})
+}

@@ -2,16 +2,12 @@ services:
   api:
     build: .
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-6767}:${APP_PORT:-6767}"
+    env_file:
+      - .env
     environment:
-      - APP_PORT=8080
-      - APP_ENV=production
+      # Di dalam docker network, host database PostgreSQL mengarah ke service 'db'
       - DATABASE_HOST=db
-      - DATABASE_PORT=5432
-      - DATABASE_USER=postgres
-      - DATABASE_PASSWORD=postgres
-      - DATABASE_NAME=toko_db
-      - DATABASE_SSLMODE=disable
     depends_on:
       db:
         condition: service_healthy
@@ -19,17 +15,19 @@ services:
   db:
     image: postgres:16-alpine
     restart: always
+    env_file:
+      - .env
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=toko_db
+      - POSTGRES_USER=${DATABASE_USER:-postgres}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-postgres}
+      - POSTGRES_DB=${DATABASE_NAME:-toko_db}
     ports:
-      - "5432:5432"
+      - "${DATABASE_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d toko_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres} -d ${DATABASE_NAME:-toko_db}"]
       interval: 5s
       timeout: 5s
       retries: 5

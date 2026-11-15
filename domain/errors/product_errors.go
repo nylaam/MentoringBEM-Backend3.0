@@ -8,4 +8,5 @@ var (
 	ErrInvalidProductName  = errx.ErrInvalidProductName
 	ErrInvalidProductPrice = errx.ErrInvalidProductPrice
 	ErrInvalidProductStock = errx.ErrInvalidProductStock
+	ErrNoFieldsToUpdate    = errx.ErrNoFieldsToUpdate
 )

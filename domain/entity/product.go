@@ -18,13 +18,15 @@ type Product struct {
 
 // NewProduct adalah Domain Entity Constructor untuk produk baru.
 func NewProduct(name string, price int64, stock int) (*Product, error) {
-	// =========================================================================
-	// TODO [Hands-on Step 1.1]: Validasi Domain Invariant Product Baru
-	// =========================================================================
-	// Aturan Bisnis Produk:
-	// 1. Nama produk wajib diisi dan minimal 3 karakter:
-	// 2. Harga produk harus lebih besar dari 0:
-	// 3. Stok produk tidak boleh negatif (>= 0):
+	if len(name) < 3 {
+		return nil, errx.ErrInvalidProductName
+	}
+	if price <= 0 {
+		return nil, errx.ErrInvalidProductPrice
+	}
+	if stock < 0 {
+		return nil, errx.ErrInvalidProductStock
+	}
 
 	now := time.Now().UTC()
 	return &Product{
@@ -37,15 +39,53 @@ func NewProduct(name string, price int64, stock int) (*Product, error) {
 	}, nil
 }
 
-// Update memvalidasi dan memperbarui data produk.
+// Update memvalidasi dan memperbarui seluruh data produk (PUT).
 func (p *Product) Update(name string, price int64, stock int) error {
-	// =========================================================================
-	// TODO [Hands-on Step 1.2]: Validasi Invariant & Update Field Produk
-	// =========================================================================
-	// 1. Validasi nama produk minimal 3 karakter:
-	// 2. Validasi harga produk > 0:
-	// 3. Stok produk tidak boleh negatif (>= 0):
-	// 4. Update data produk dan timestamp update:
+	if len(name) < 3 {
+		return errx.ErrInvalidProductName
+	}
+	if price <= 0 {
+		return errx.ErrInvalidProductPrice
+	}
+	if stock < 0 {
+		return errx.ErrInvalidProductStock
+	}
 
-	return errx.ErrInvalidProductName
+	p.Name = name
+	p.Price = price
+	p.Stock = stock
+	p.UpdatedAt = time.Now().UTC()
+	return nil
+}
+
+// Patch memvalidasi dan memperbarui data produk secara parsial (PATCH).
+// Hanya field non-nil yang akan diperbarui (umumnya untuk perubahan kecil seperti update stok atau harga).
+func (p *Product) Patch(name *string, price *int64, stock *int) error {
+	if name == nil && price == nil && stock == nil {
+		return errx.ErrNoFieldsToUpdate
+	}
+
+	if name != nil {
+		if len(*name) < 3 {
+			return errx.ErrInvalidProductName
+		}
+		p.Name = *name
+	}
+
+	if price != nil {
+		if *price <= 0 {
+			return errx.ErrInvalidProductPrice
+		}
+		p.Price = *price
+	}
+
+	if stock != nil {
+		if *stock < 0 {
+			return errx.ErrInvalidProductStock
+		}
+		p.Stock = *stock
+	}
+
+	p.UpdatedAt = time.Now().UTC()
+	return nil
 }

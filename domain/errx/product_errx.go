@@ -6,4 +6,5 @@ var (
 	ErrInvalidProductName  = New(KindInvalid, "INVALID_NAME", "nama produk minimal harus 3 karakter")
 	ErrInvalidProductPrice = New(KindInvalid, "INVALID_PRICE", "harga produk harus lebih besar dari 0")
 	ErrInvalidProductStock = New(KindInvalid, "INVALID_STOCK", "stok produk tidak boleh negatif")
+	ErrNoFieldsToUpdate    = New(KindInvalid, "NO_FIELDS_TO_UPDATE", "minimal satu field (name, price, stock) harus diisi untuk patch")
 )

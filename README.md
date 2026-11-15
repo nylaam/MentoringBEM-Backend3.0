@@ -1,9 +1,21 @@
-# 🛒 Toko Backend API — Mentoring Hands-on Lab
+# 🛒 Toko Backend API — Product Domain (Mentoring & Hands-on Lab)
 
-Repositori ini adalah bahan praktik **Hands-on Mentoring** untuk materi presentasi di [`index.md`](file:///D:/Kuliah/be-mentoring/index.md):
+Repositori ini adalah bahan praktik **Hands-on Mentoring & Workshop** untuk materi:
 > **"Building Production-Ready Backend with Go Fiber, Clean Architecture & DDD"**
 
-Proyek ini dibangun menggunakan **Go**, framework performan generasi terbaru **Go Fiber v3**, prinsip **Clean Architecture & Domain-Driven Design (DDD)**, serta dilengkapi **Unit Tests & Mocks** di folder `tests/unit/` dan **Docker Multi-Stage Build**.
+Proyek ini dibangun menggunakan **Go**, framework modern **Go Fiber v3**, arsitektur bersih **Clean Architecture & Domain-Driven Design (DDD)**, serta fokus terisolasi pada **Domain Product** (CRUD lengkap + **PATCH** untuk pembaruan cepat/kecil). API ini sudah dilengkapi **Interactive Swagger UI (Password-Protected)**, **CORS**, validasi ketat, autentikasi **API Key**, port default **6767**, dan siap dideploy langsung via Docker untuk dikonsumsi oleh tim **Frontend (FE)**.
+
+---
+
+## 📖 Akses Swagger UI di Browser
+
+Swagger UI interaktif tersedia di:
+- **URL:** [`http://localhost:6767/docs`](http://localhost:6767/docs) (atau [`http://localhost:6767/swagger`](http://localhost:6767/swagger))
+- **Autentikasi (HTTP Basic Auth):**
+  - **Username:** `admin` *(konfigurasi di `.env`: `SWAGGER_USER`)*
+  - **Password:** `admin123` *(konfigurasi di `.env`: `SWAGGER_PASSWORD`)*
+
+Setelah login, klik tombol **Authorize** dan masukkan API Key: `mentoring-secret-api-key-2026` untuk mencoba seluruh endpoint langsung dari browser (**Try it out**).
 
 ---
 
@@ -16,154 +28,149 @@ be-mentoring/
 │       └── ci.yml               # Automated CI (Test & Build di GitHub Actions)
 ├── cmd/
 │   ├── app/
-│   │   └── main.go              # Composition Root: Dependency Injection (Go Fiber v3)
+│   │   └── main.go              # Composition Root: Dependency Injection, CORS, Swagger, API Key (Fiber v3)
 │   ├── migrate/
 │   │   └── main.go              # Database Migration Runner
 │   └── seed/
 │       └── main.go              # Database Seeder (Produk awal)
 ├── docs/
-│   └── api.md                   # Dokumentasi REST API lengkap & cURL
+│   ├── api.md                   # Dokumentasi REST API lengkap, schema & cURL
+│   ├── openapi.json             # OpenAPI 3.0.3 Specification (Port 6767)
+│   ├── spec.go                  # Embedded OpenAPI JSON ke dalam binary (//go:embed)
+│   ├── swagger.go               # Swagger UI Handler & Basic Auth Router
+│   └── apidog_collection.json   # Koleksi Postman / Apidog siap import
 ├── domain/                      # Core Domain Layer (Pure Go, 0 external framework)
 │   ├── contracts/               # Interface Repository & Service
-│   │   ├── order_repository.go
-│   │   ├── order_service.go
 │   │   ├── product_repository.go
 │   │   └── product_service.go
 │   ├── dto/                     # Data Transfer Objects (Request & Response)
-│   │   ├── order_dto.go
-│   │   ├── product_dto.go
-│   │   └── response_dto.go
-│   ├── entity/                  # Business Logic & Invariants
-│   │   ├── order.go             # Entity Order (Contoh Implementasi Lengkap)
-│   │   └── product.go           # [HANDS-ON STEP 1 LOGIC] Invariant Produk
-│   ├── enums/                   # Status Enums (PENDING, PAID, dll.)
-│   │   └── order_status.go
-│   └── errors/                  # Domain Errors terisolasi per entity (Slide 13)
-│       ├── errors.go            # Base DomainError & ErrorKind
-│       ├── order_errors.go      # Error Order
-│       └── product_errors.go    # Error Produk
+│   │   ├── product_dto.go       # Create, Update (PUT), dan Patch (PATCH) DTO
+│   │   └── response_dto.go      # Standarisasi JSON Response & Error
+│   ├── entity/                  # Business Logic & Domain Invariants
+│   │   └── product.go           # Entity Product (NewProduct, Update, Patch)
+│   └── errors/                  # Domain Errors terisolasi
+│       ├── errors.go
+│       └── product_errors.go
 ├── helpers/                     # Shared Utility Helpers
 │   └── pagination/
-│       └── pagination.go        # Helper Pagination (Page, Limit, Offset)
+│       └── pagination.go
 ├── internal/
-│   ├── app/                     # Modul Fitur Aplikasi
-│   │   ├── order/               # Fitur Order (Contoh Implementasi Lengkap / Reference)
-│   │   │   ├── handler.go       # Fiber v3 HTTP Handler
-│   │   │   ├── routes.go        # HTTP Route Binding
-│   │   │   └── service.go       # Use Case Service
-│   │   └── product/             # Fitur Produk [HANDS-ON CRUD UTAMA]
-│   │       ├── handler.go       # [HANDS-ON STEP 3 LOGIC] Delivery Layer
-│   │       ├── routes.go        # HTTP Route Binding
-│   │       └── service.go       # [HANDS-ON STEP 2 LOGIC] Use Case Service
+│   ├── app/                     # Fitur Domain Aplikasi
+│   │   └── product/             # Fitur Produk (CRUD & PATCH)
+│   │       ├── handler.go       # Fiber v3 Thin Controller
+│   │       ├── routes.go        # HTTP Route Binding (/api/v1/products)
+│   │       └── service.go       # Use Case Service
 │   ├── config/
-│   │   └── config.go            # 12-Factor App Configuration (.env)
+│   │   └── config.go            # 12-Factor App Config (.env / API_KEY / SWAGGER_USER / Port 6767)
 │   ├── infra/                   # Infrastructure Layer
 │   │   ├── database/
-│   │   │   └── postgres.go      # PostgreSQL Connection Pool
+│   │   │   └── postgres.go      # PostgreSQL Connection Pool & Auto-Table Init
 │   │   ├── repository/
-│   │   │   ├── order_repository.go
-│   │   │   └── product_repository.go
-│   │   ├── scheduler/           # Background Job Scheduler
-│   │   │   └── scheduler.go
-│   │   └── storage/             # File Storage Abstraction
+│   │   │   └── product_repository.go # Postgres & In-Memory Fallback Repo
+│   │   └── storage/
 │   │       └── storage.go
-│   └── middlewares/             # Fiber v3 Middlewares (RequestID, Logger, Error Handler)
+│   └── middlewares/             # Fiber v3 Middlewares (API Key, CORS, RequestID, Logger, Error Handler)
+│       ├── api_key.go           # Proteksi API Key
 │       ├── error_handler.go
 │       ├── logger.go
 │       └── request_id.go
-├── migrations/                  # File DDL SQL Database Migrations per Entity
+├── migrations/                  # File DDL SQL Database Migrations
 │   ├── 000001_create_products_table.up.sql
-│   ├── 000001_create_products_table.down.sql
-│   ├── 000002_create_orders_table.up.sql
-│   ├── 000002_create_orders_table.down.sql
-│   ├── 000003_create_order_items_table.up.sql
-│   └── 000003_create_order_items_table.down.sql
+│   └── 000001_create_products_table.down.sql
 ├── pkg/
 │   ├── response/
 │   │   └── response.go          # Standardized API response builder
 │   └── validator/
-│       └── validator.go         # Request body payload validator
-├── tests/                       # Semua File Test Terpusat di tests/unit
+│       └── validator.go         # Request body payload validator (Go Playground)
+├── tests/                       # Unit Tests Terpusat
 │   └── unit/
-│       ├── product_entity_test.go # [HANDS-ON] Test Domain Invariant Produk
-│       ├── product_service_test.go# [HANDS-ON] Test Mock Repository & Service Produk
-│       ├── product_handler_test.go# [HANDS-ON] Test Controller / Delivery Produk
-│       ├── order_entity_test.go   # Test Reference Order Entity
-│       ├── order_service_test.go  # Test Reference Order Service
-│       ├── order_handler_test.go  # Test Reference Order Handler
-│       └── pagination_test.go     # Test Pagination Helper
+│       ├── api_key_test.go        # Test Middleware API Key Auth
+│       ├── pagination_test.go     # Test Pagination Helper
+│       ├── product_entity_test.go # Test Invariant Domain Product (New, Update, Patch)
+│       ├── product_service_test.go# Test Mock Repository & Service Product
+│       ├── product_handler_test.go# Test Controller / Delivery Fiber v3
+│       └── swagger_test.go        # Test Swagger UI Basic Auth & OpenAPI Endpoint
 ├── .env.example
-├── Dockerfile                   # Multi-stage minimal production image
-├── docker-compose.yml           # PostgreSQL + API container stack
+├── Dockerfile                   # Multi-stage minimal production image (Port 6767)
+├── docker-compose.yml           # PostgreSQL + API container stack (Port 6767:6767)
 ├── go.mod
-├── answer.md                    # 🔑 KUNCI JAWABAN LENGKAP SEMUA // TODO
+├── answer.md                    # 🔑 Kunci Jawaban Lengkap Semua Tahapan Hands-on
 └── README.md
 ```
 
 ---
 
-## 🎯 Fokus Hands-on Lab: Product CRUD
+## 🎯 Fitur Endpoint Product Domain (CRUD + PATCH)
 
-Hands-on mentoring ini berfokus pada **Product CRUD** dengan alur Clean Architecture (Domain Entity ➔ Service Use Case ➔ Delivery Controller). Fitur Order disediakan sebagai contoh implementasi lengkap (*reference architecture*).
+- **Default Port:** `6767` (`http://localhost:6767`)
+- **Autentikasi Header API:** `X-API-Key: mentoring-secret-api-key-2026`
+- **Swagger Docs:** `http://localhost:6767/docs` *(Basic Auth: admin / admin123)*
 
-Tugas peserta adalah menyelesaikan bagian bertanda **`// TODO`**:
+| Method | Endpoint | Deskripsi | Auth |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Root Welcome API | Public |
+| `GET` | `/healthz` | Health check server & database | Public |
+| `GET` | `/docs` | Swagger UI Interactive API Docs | **Basic Auth** (`admin` / `admin123`) |
+| `GET` | `/docs/openapi.json` | OpenAPI 3.0.3 Specification JSON | **Basic Auth** (`admin` / `admin123`) |
+| `GET` | `/swagger` | Alias redirect ke `/docs` | Public -> Basic Auth |
+| `GET` | `/api/v1/products` | Ambil semua produk | **API Key** |
+| `GET` | `/api/v1/products/:id` | Ambil detail produk by ID | **API Key** |
+| `POST` | `/api/v1/products` | Tambah produk baru | **API Key** |
+| `PUT` | `/api/v1/products/:id` | Update seluruh data produk | **API Key** |
+| `PATCH`| `/api/v1/products/:id` | Update parsial produk (stok/harga/nama) | **API Key** |
+| `DELETE`| `/api/v1/products/:id`| Hapus produk by ID | **API Key** |
 
-| Step | File | Tugas Hands-on Product CRUD |
-| :--- | :--- | :--- |
-| **Step 1.1** | [`domain/entity/product.go`](file:///D:/Kuliah/be-mentoring/domain/entity/product.go) | **Domain Invariant `NewProduct`**: Validasi nama minimal 3 karakter, harga > 0, dan stok >= 0. |
-| **Step 1.2** | [`domain/entity/product.go`](file:///D:/Kuliah/be-mentoring/domain/entity/product.go) | **Domain Invariant `Update`**: Validasi perubahan nama, harga, stok, serta perbarui `UpdatedAt`. |
-| **Step 2.1** | [`internal/app/product/service.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/service.go) | **Use Case `CreateProduct`**: Panggil `entity.NewProduct` dan simpan via `s.repo.Save`. |
-| **Step 2.2** | [`internal/app/product/service.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/service.go) | **Use Case `UpdateProduct`**: Ambil produk via `s.repo.FindByID`, jalankan `p.Update(...)`, simpan via `s.repo.Update`. |
-| **Step 2.3** | [`internal/app/product/service.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/service.go) | **Use Case `DeleteProduct`**: Cek keberadaan produk dan hapus via `s.repo.Delete`. |
-| **Step 3.1** | [`internal/app/product/handler.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/handler.go) | **Controller (POST /products)**: Binding JSON, validasi request DTO, panggil service `CreateProduct`, return 201 Created. |
-| **Step 3.2** | [`internal/app/product/handler.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/handler.go) | **Controller (PUT /products/:id)**: Ambil param `id`, bind & validasi `UpdateProductRequest`, panggil `UpdateProduct`, return 200 OK. |
-| **Step 3.3** | [`internal/app/product/handler.go`](file:///D:/Kuliah/be-mentoring/internal/app/product/handler.go) | **Controller (DELETE /products/:id)**: Ambil param `id`, panggil `DeleteProduct`, return 200 OK dengan pesan sukses. |
+---
+
+## 🌐 Siap Dikonsumsi Frontend (FE Ready)
+
+1. **CORS Otomatis Aktif:** Frontend dari `http://localhost:3000` (Next.js/React/Vite) atau domain manapun dapat langsung memanggil API tanpa isu CORS.
+2. **Autentikasi Mudah:** FE cukup menambahkan header `'X-API-Key': process.env.NEXT_PUBLIC_API_KEY` pada setiap request API.
+3. **Format Respon Konsisten:**
+   ```json
+   {
+     "success": true,
+     "data": { ... }
+   }
+   ```
+4. **TypeScript Types & Contoh Fetch:** Tersedia lengkap di [`docs/api.md`](file:///D:/Kuliah/be-mentoring/docs/api.md#4-panduan-konsumsi-api-untuk-tim-frontend-fe).
 
 ---
 
 ## 🧪 Menguji Logika dengan Unit Test
 
-Jalankan test suite di terminal:
+Jalankan test suite terpusat:
 
 ```powershell
 go test ./tests/unit/... -v -cover
 ```
-*(Catatan: Tambahkan flag `-race` jika dijalankan di environment Linux atau Docker dengan CGO aktif)*
 
-- **Sebelum `// TODO` dikerjakan:** Test Product CRUD akan gagal (FAIL) dan memberi petunjuk jelas apa yang belum selesai.
-- **Setelah `// TODO` diselesaikan:** Seluruh pengujian akan lulus 100% (PASS) dalam hitungan milidetik tanpa membutuhkan database!
+Seluruh pengujian unit berjalan 100% (PASS) dalam hitungan milidetik tanpa perlu database aktif!
 
 ---
 
 ## 🚀 Menjalankan Server Aplikasi
 
 ### Cara 1: Mode Cepat Tanpa Database (Auto In-Memory)
-Aplikasi otomatis mendeteksi jika Postgres belum aktif dan beralih ke mode **In-Memory Repository**:
+Aplikasi otomatis mendeteksi jika PostgreSQL tidak tersedia dan langsung menggunakan **In-Memory Repository** dengan data awal di port **6767**:
 
 ```powershell
 go run ./cmd/app
 ```
-Akses di browser / Postman / cURL:
-- Healthcheck: `http://localhost:8080/healthz`
-- Daftar Produk: `http://localhost:8080/api/v1/products`
-- Dokumentasi Lengkap: [`docs/api.md`](file:///D:/Kuliah/be-mentoring/docs/api.md)
+Akses di browser:
+- Swagger UI: `http://localhost:6767/docs` *(Username: admin, Password: admin123)*
+- Root Info: `http://localhost:6767/`
+- Healthcheck: `http://localhost:6767/healthz`
+- Daftar Produk: `http://localhost:6767/api/v1/products`
 
 ---
 
 ### Cara 2: Menjalankan dengan Database PostgreSQL & Docker Compose
 ```powershell
-# 1. Nyalakan PostgreSQL
+# 1. Nyalakan Container API (Port 6767) dan PostgreSQL di background
 docker compose up -d
 
-# 2. Jalankan migrasi tabel
-go run ./cmd/migrate
-
-# (Opsional: rollback semua migrasi)
-# go run ./cmd/migrate down
-
-# 3. Masukkan data dummy produk
-go run ./cmd/seed
-
-# 4. Jalankan aplikasi
-go run ./cmd/app
+# 2. Periksa status container
+docker compose ps
 ```
+Aplikasi dan Swagger UI akan langsung aktif di `http://localhost:6767/docs`.

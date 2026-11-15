@@ -8,5 +8,6 @@ func RegisterRoutes(router fiber.Router, handler *ProductHandler) {
 	products.Get("/", handler.GetAll)
 	products.Get("/:id", handler.GetByID)
 	products.Put("/:id", handler.Update)
+	products.Patch("/:id", handler.Patch)
 	products.Delete("/:id", handler.Delete)
 }

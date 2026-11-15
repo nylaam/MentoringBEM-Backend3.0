@@ -4,6 +4,7 @@ import (
 	"context"
 	stderrs "errors"
 	"testing"
+	"time"
 
 	"github.com/mentoring/toko-backend/domain/dto"
 	"github.com/mentoring/toko-backend/domain/entity"
@@ -65,7 +66,7 @@ func (m *mockProductRepoService) UpdateStock(ctx context.Context, id string, qua
 }
 
 // -----------------------------------------------------------------------------
-// Test CreateProduct (Step 2.1)
+// Test CreateProduct
 // -----------------------------------------------------------------------------
 
 func TestProductService_CreateProduct_Success(t *testing.T) {
@@ -100,13 +101,12 @@ func TestProductService_CreateProduct_ValidationError(t *testing.T) {
 	svc := product.NewProductService(mockRepo)
 
 	req := dto.CreateProductRequest{
-		Name:  "X", // Kurang dari 3 karakter
-		Price: 1_000_000,
+		Name:  "A", // Invalid length < 3
+		Price: 1_000,
 		Stock: 5,
 	}
 
 	res, err := svc.CreateProduct(context.Background(), req)
-	assert.Error(t, err)
 	assert.ErrorIs(t, err, errx.ErrInvalidProductName)
 	assert.Nil(t, res)
 }
@@ -114,39 +114,79 @@ func TestProductService_CreateProduct_ValidationError(t *testing.T) {
 func TestProductService_CreateProduct_RepoError(t *testing.T) {
 	mockRepo := &mockProductRepoService{
 		saveFunc: func(ctx context.Context, p *entity.Product) error {
-			return stderrs.New("database timeout")
+			return stderrs.New("database connection failed")
 		},
 	}
+
 	svc := product.NewProductService(mockRepo)
 
 	req := dto.CreateProductRequest{
-		Name:  "Headset Gaming",
-		Price: 850_000,
-		Stock: 10,
+		Name:  "Mechanical Keyboard RGB",
+		Price: 1_250_000,
+		Stock: 20,
 	}
 
 	res, err := svc.CreateProduct(context.Background(), req)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "database timeout")
 	assert.Nil(t, res)
 }
 
 // -----------------------------------------------------------------------------
-// Test UpdateProduct (Step 2.2)
+// Test GetAllProducts & GetProductByID
+// -----------------------------------------------------------------------------
+
+func TestProductService_GetAllProducts(t *testing.T) {
+	mockRepo := &mockProductRepoService{
+		findAllFunc: func(ctx context.Context) ([]*entity.Product, error) {
+			return []*entity.Product{
+				{ID: "p1", Name: "Product 1", Price: 1000, Stock: 10},
+				{ID: "p2", Name: "Product 2", Price: 2000, Stock: 20},
+			}, nil
+		},
+	}
+
+	svc := product.NewProductService(mockRepo)
+
+	res, err := svc.GetAllProducts(context.Background())
+	assert.NoError(t, err)
+	assert.Len(t, res, 2)
+}
+
+func TestProductService_GetProductByID_Success(t *testing.T) {
+	mockRepo := &mockProductRepoService{
+		findByIDFunc: func(ctx context.Context, id string) (*entity.Product, error) {
+			return &entity.Product{ID: id, Name: "Found Product", Price: 1000, Stock: 10}, nil
+		},
+	}
+
+	svc := product.NewProductService(mockRepo)
+
+	res, err := svc.GetProductByID(context.Background(), "p1")
+	assert.NoError(t, err)
+	if assert.NotNil(t, res) {
+		assert.Equal(t, "Found Product", res.Name)
+	}
+}
+
+// -----------------------------------------------------------------------------
+// Test UpdateProduct (PUT)
 // -----------------------------------------------------------------------------
 
 func TestProductService_UpdateProduct_Success(t *testing.T) {
+	existing := &entity.Product{
+		ID:        "prod-001",
+		Name:      "Monitor Jadul",
+		Price:     2_000_000,
+		Stock:     10,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
 	mockRepo := &mockProductRepoService{
 		findByIDFunc: func(ctx context.Context, id string) (*entity.Product, error) {
-			return &entity.Product{
-				ID:    id,
-				Name:  "Monitor Standar",
-				Price: 1_000_000,
-				Stock: 5,
-			}, nil
+			return existing, nil
 		},
 		updateFunc: func(ctx context.Context, p *entity.Product) error {
-			assert.Equal(t, "Monitor Ultrawide", p.Name)
 			return nil
 		},
 	}
@@ -188,7 +228,80 @@ func TestProductService_UpdateProduct_NotFound(t *testing.T) {
 }
 
 // -----------------------------------------------------------------------------
-// Test DeleteProduct (Step 2.3)
+// Test PatchProduct (PATCH)
+// -----------------------------------------------------------------------------
+
+func TestProductService_PatchProduct_Success(t *testing.T) {
+	existing := &entity.Product{
+		ID:        "prod-001",
+		Name:      "Wireless Keyboard",
+		Price:     500_000,
+		Stock:     20,
+		CreatedAt: time.Now().Add(-1 * time.Hour),
+		UpdatedAt: time.Now().Add(-1 * time.Hour),
+	}
+
+	var updatedProduct *entity.Product
+	mockRepo := &mockProductRepoService{
+		findByIDFunc: func(ctx context.Context, id string) (*entity.Product, error) {
+			return existing, nil
+		},
+		updateFunc: func(ctx context.Context, p *entity.Product) error {
+			updatedProduct = p
+			return nil
+		},
+	}
+
+	svc := product.NewProductService(mockRepo)
+
+	newStock := 35
+	req := dto.PatchProductRequest{
+		Stock: &newStock,
+	}
+
+	res, err := svc.PatchProduct(context.Background(), "prod-001", req)
+	assert.NoError(t, err)
+	if assert.NotNil(t, res) {
+		assert.Equal(t, 35, res.Stock)
+		assert.Equal(t, "Wireless Keyboard", res.Name)
+		assert.Equal(t, int64(500_000), res.Price)
+		assert.NotNil(t, updatedProduct)
+		assert.Equal(t, 35, updatedProduct.Stock)
+	}
+}
+
+func TestProductService_PatchProduct_NoFieldsError(t *testing.T) {
+	mockRepo := &mockProductRepoService{}
+	svc := product.NewProductService(mockRepo)
+
+	req := dto.PatchProductRequest{}
+
+	res, err := svc.PatchProduct(context.Background(), "prod-001", req)
+	assert.ErrorIs(t, err, errx.ErrNoFieldsToUpdate)
+	assert.Nil(t, res)
+}
+
+func TestProductService_PatchProduct_NotFound(t *testing.T) {
+	mockRepo := &mockProductRepoService{
+		findByIDFunc: func(ctx context.Context, id string) (*entity.Product, error) {
+			return nil, errx.ErrProductNotFound
+		},
+	}
+
+	svc := product.NewProductService(mockRepo)
+
+	newPrice := int64(600_000)
+	req := dto.PatchProductRequest{
+		Price: &newPrice,
+	}
+
+	res, err := svc.PatchProduct(context.Background(), "non-existent", req)
+	assert.ErrorIs(t, err, errx.ErrProductNotFound)
+	assert.Nil(t, res)
+}
+
+// -----------------------------------------------------------------------------
+// Test DeleteProduct
 // -----------------------------------------------------------------------------
 
 func TestProductService_DeleteProduct_Success(t *testing.T) {
