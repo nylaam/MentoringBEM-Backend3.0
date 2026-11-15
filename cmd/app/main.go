@@ -92,16 +92,16 @@ func main() {
 	})
 
 	// 7. Route Registration
-	// Register Swagger UI Documentation tunggal (/docs) dengan proteksi Basic Auth
-	docs.RegisterSwaggerRoutes(app, cfg.SwaggerUser, cfg.SwaggerPassword)
-	log.Printf("[Docs] Swagger UI aktif di http://localhost%s/docs (User: %s, Basic Auth Password Protected)\n", fmt.Sprintf(":%s", cfg.AppPort), cfg.SwaggerUser)
+	// Register Swagger UI Documentation tunggal (/docs) dengan proteksi Basic Auth & API Key dari .env
+	docs.RegisterSwaggerRoutes(app, cfg.SwaggerUser, cfg.SwaggerPassword, cfg.APIKey)
+	log.Printf("[Docs] Swagger UI aktif di http://localhost%s/docs (Kredensial dari .env: User '%s', Password Protected)\n", fmt.Sprintf(":%s", cfg.AppPort), cfg.SwaggerUser)
 
 	// Business API (/api/v1)
 	api := app.Group("/api/v1")
 
 	// Pasang proteksi API Key pada /api/v1 jika API_KEY dikonfigurasi di .env
 	if cfg.APIKey != "" {
-		log.Println("[Security] Proteksi API Key aktif untuk endpoint /api/v1")
+		log.Println("[Security] Proteksi API Key aktif untuk endpoint /api/v1 (kunci dibaca dari .env)")
 		api.Use(middlewares.NewAPIKeyMiddleware(cfg.APIKey))
 	} else {
 		log.Println("[Security] API_KEY tidak disetel, endpoint /api/v1 bersifat publik (tanpa autentikasi API Key)")

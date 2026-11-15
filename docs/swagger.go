@@ -1,11 +1,13 @@
 package docs
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/basicauth"
 )
 
-const swaggerUIHTML = `<!DOCTYPE html>
+const swaggerUITemplate = `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -41,6 +43,9 @@ const swaggerUIHTML = `<!DOCTYPE html>
         layout: "StandaloneLayout",
         persistAuthorization: true
       });
+      if ("%s" !== "") {
+        ui.preauthorizeApiKey("ApiKeyAuth", "%s");
+      }
       window.ui = ui;
     };
   </script>
@@ -48,7 +53,8 @@ const swaggerUIHTML = `<!DOCTYPE html>
 </html>`
 
 // RegisterSwaggerRoutes mendaftarkan endpoint tunggal Swagger UI dan spesifikasi OpenAPI dengan proteksi Basic Auth.
-func RegisterSwaggerRoutes(router fiber.Router, username, password string) {
+// Kredensial login (username & password) serta API Key dibaca langsung dari environment (.env).
+func RegisterSwaggerRoutes(router fiber.Router, username, password, apiKey string) {
 	docsGroup := router.Group("/docs", basicauth.New(basicauth.Config{
 		Users: map[string]string{
 			username: password,
@@ -56,14 +62,16 @@ func RegisterSwaggerRoutes(router fiber.Router, username, password string) {
 		Realm: "Toko Backend Swagger Documentation",
 	}))
 
+	renderedHTML := fmt.Sprintf(swaggerUITemplate, apiKey, apiKey)
+
 	docsGroup.Get("", func(c fiber.Ctx) error {
 		c.Set("Content-Type", "text/html; charset=utf-8")
-		return c.SendString(swaggerUIHTML)
+		return c.SendString(renderedHTML)
 	})
 
 	docsGroup.Get("/", func(c fiber.Ctx) error {
 		c.Set("Content-Type", "text/html; charset=utf-8")
-		return c.SendString(swaggerUIHTML)
+		return c.SendString(renderedHTML)
 	})
 
 	docsGroup.Get("/openapi.json", func(c fiber.Ctx) error {

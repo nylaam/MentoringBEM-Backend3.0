@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupSwaggerTestApp(user, pass string) *fiber.App {
+func setupSwaggerTestApp(user, pass, apiKey string) *fiber.App {
 	app := fiber.New()
-	docs.RegisterSwaggerRoutes(app, user, pass)
+	docs.RegisterSwaggerRoutes(app, user, pass, apiKey)
 	return app
 }
 
@@ -26,7 +26,7 @@ func basicAuthHeader(username, password string) string {
 }
 
 func TestSwagger_Unauthorized_WithoutCredentials(t *testing.T) {
-	app := setupSwaggerTestApp("admin", "admin123")
+	app := setupSwaggerTestApp("admin", "admin123", "secret-key")
 
 	req := httptest.NewRequest(http.MethodGet, "/docs", nil)
 	resp, err := app.Test(req)
@@ -36,7 +36,7 @@ func TestSwagger_Unauthorized_WithoutCredentials(t *testing.T) {
 }
 
 func TestSwagger_Unauthorized_WrongPassword(t *testing.T) {
-	app := setupSwaggerTestApp("admin", "admin123")
+	app := setupSwaggerTestApp("admin", "admin123", "secret-key")
 
 	req := httptest.NewRequest(http.MethodGet, "/docs", nil)
 	req.Header.Set("Authorization", basicAuthHeader("admin", "wrongpassword"))
@@ -47,7 +47,7 @@ func TestSwagger_Unauthorized_WrongPassword(t *testing.T) {
 }
 
 func TestSwagger_Success_WithCredentials(t *testing.T) {
-	app := setupSwaggerTestApp("admin", "admin123")
+	app := setupSwaggerTestApp("admin", "admin123", "secret-key")
 
 	req := httptest.NewRequest(http.MethodGet, "/docs", nil)
 	req.Header.Set("Authorization", basicAuthHeader("admin", "admin123"))
@@ -60,10 +60,11 @@ func TestSwagger_Success_WithCredentials(t *testing.T) {
 	bodyBytes, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	assert.Contains(t, string(bodyBytes), "swagger-ui")
+	assert.Contains(t, string(bodyBytes), "secret-key")
 }
 
 func TestSwagger_OpenAPISpec_Success(t *testing.T) {
-	app := setupSwaggerTestApp("admin", "admin123")
+	app := setupSwaggerTestApp("admin", "admin123", "secret-key")
 
 	req := httptest.NewRequest(http.MethodGet, "/docs/openapi.json", nil)
 	req.Header.Set("Authorization", basicAuthHeader("admin", "admin123"))
