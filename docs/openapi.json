@@ -10,6 +10,10 @@
   },
   "servers": [
     {
+      "url": "/",
+      "description": "Server Aktif (Otomatis mendeteksi Domain & HTTPS)"
+    },
+    {
       "url": "http://localhost:6767",
       "description": "Lokal Server Pengembangan (Fiber v3 Port 6767)"
     }
