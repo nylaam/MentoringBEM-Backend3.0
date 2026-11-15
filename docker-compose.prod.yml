@@ -25,7 +25,7 @@ services:
       - POSTGRES_DB=${DATABASE_NAME:-toko_db}
     ports:
       # Port 5434 di host VPS diarahkan ke port 5432 di dalam container
-      - "${DATABASE_HOST_PORT:-5434}:5432"
+      - "${DATABASE_HOST_PORT:-5436}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
