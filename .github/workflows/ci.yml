@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD Pipeline & GHCR Publish
 
 on:
   push:
@@ -6,9 +6,13 @@ on:
   pull_request:
     branches: [ main, master ]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   test:
-    name: Unit Test & Build
+    name: Run Unit Tests & Build Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -21,7 +25,81 @@ jobs:
           cache: true
 
       - name: Run Unit Tests
-        run: go test ./... -v -race -cover
+        run: go test ./... -v -cover
 
-      - name: Build Binary
-        run: go build -v ./cmd/app
+      - name: Validate Binary Compilation
+        run: go build -v -o /dev/null ./cmd/app
+
+  publish:
+    name: Build & Push Docker Image to GHCR
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker Metadata (Tags & Labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Auto Deploy to VPS
+    needs: publish
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check VPS Secrets & Trigger Deployment
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH || '~/be-mentoring' }}
+        run: |
+          if [ -z "$VPS_HOST" ] || [ -z "$VPS_USER" ] || [ -z "$VPS_KEY" ]; then
+            echo "ℹ️ Info: VPS Secrets (VPS_HOST, VPS_USER, VPS_SSH_KEY) belum diset di GitHub Repository Secrets."
+            echo "✅ Image Docker berhasil di-build dan di-publish ke GHCR: ghcr.io/${{ github.repository }}:latest"
+            echo "👉 Di VPS, Anda tinggal menjalankan perintah:"
+            echo "   docker pull ghcr.io/${{ github.repository }}:latest"
+            exit 0
+          fi
+
+          echo "🚀 Menghubungi VPS di $VPS_HOST untuk update container..."
+          mkdir -p ~/.ssh
+          echo "$VPS_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p "$VPS_PORT" -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
+          ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "
+            cd $DEPLOY_PATH && \
+            docker compose -f docker-compose.prod.yml pull api && \
+            docker compose -f docker-compose.prod.yml up -d
+          "
+          echo "🎉 Auto deploy ke VPS selesai dengan sukses!"

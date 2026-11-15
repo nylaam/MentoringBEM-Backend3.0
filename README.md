@@ -3,7 +3,7 @@
 Repositori ini adalah bahan praktik **Hands-on Mentoring & Workshop** untuk materi:
 > **"Building Production-Ready Backend with Go Fiber, Clean Architecture & DDD"**
 
-Proyek ini dibangun menggunakan **Go**, framework modern **Go Fiber v3**, arsitektur bersih **Clean Architecture & Domain-Driven Design (DDD)**, serta fokus terisolasi pada **Domain Product** (CRUD lengkap + **PATCH** untuk pembaruan cepat/kecil). API ini sudah dilengkapi **Interactive Swagger UI (Password-Protected)** di alamat tunggal `/docs`, **CORS**, validasi ketat, autentikasi **API Key**, port default **6767**, dan siap dideploy langsung via Docker untuk dikonsumsi oleh tim **Frontend (FE)**.
+Proyek ini dibangun menggunakan **Go**, framework modern **Go Fiber v3**, arsitektur bersih **Clean Architecture & Domain-Driven Design (DDD)**, serta fokus terisolasi pada **Domain Product** (CRUD lengkap + **PATCH** untuk pembaruan cepat/kecil). API ini sudah dilengkapi **Interactive Swagger UI (Password-Protected)** di alamat tunggal `/docs`, **CORS**, validasi ketat, autentikasi **API Key**, port default **6767**, automated **CI/CD ke GitHub Container Registry (`ghcr.io`)**, dan siap dideploy langsung via Docker untuk dikonsumsi oleh tim **Frontend (FE)**.
 
 ---
 
@@ -15,7 +15,7 @@ Swagger UI interaktif tersedia di alamat tunggal:
   - **Username:** `admin` *(konfigurasi di `.env`: `SWAGGER_USER`)*
   - **Password:** `admin123` *(konfigurasi di `.env`: `SWAGGER_PASSWORD`)*
 
-Setelah login, klik tombol **Authorize** dan masukkan API Key: `mentoring-secret-api-key-2026` untuk mencoba seluruh endpoint langsung dari browser (**Try it out**).
+Setelah login, Swagger UI **otomatis ter-authorize** dengan API Key dari `.env` (`mentoring-secret-api-key-2026`) sehingga Anda bisa langsung mencoba seluruh endpoint (**Try it out**).
 
 ---
 
@@ -25,7 +25,7 @@ Setelah login, klik tombol **Authorize** dan masukkan API Key: `mentoring-secret
 be-mentoring/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml               # Automated CI (Test & Build di GitHub Actions)
+│       └── ci.yml               # Automated CI/CD (Test, Build, Push GHCR & Deploy)
 ├── cmd/
 │   ├── app/
 │   │   └── main.go              # Composition Root: Dependency Injection, CORS, Swagger, API Key (Fiber v3)
@@ -92,7 +92,8 @@ be-mentoring/
 │       └── swagger_test.go        # Test Swagger UI Basic Auth & OpenAPI Endpoint
 ├── .env.example
 ├── Dockerfile                   # Multi-stage minimal production image (Port 6767)
-├── docker-compose.yml           # PostgreSQL + API container stack (Port 6767:6767)
+├── docker-compose.yml           # Local Development Stack (build: .)
+├── docker-compose.prod.yml      # Production VPS Stack (image: ghcr.io)
 ├── go.mod
 ├── answer.md                    # 🔑 Kunci Jawaban Lengkap Semua Tahapan Hands-on
 └── README.md
@@ -148,7 +149,7 @@ Seluruh pengujian unit berjalan 100% (PASS) dalam hitungan milidetik tanpa perlu
 
 ---
 
-## 🚀 Menjalankan Server Aplikasi
+## 🚀 Menjalankan Server Aplikasi (Lokal)
 
 ### Cara 1: Mode Cepat Tanpa Database (Auto In-Memory)
 Aplikasi otomatis mendeteksi jika PostgreSQL tidak tersedia dan langsung menggunakan **In-Memory Repository** dengan data awal di port **6767**:
@@ -172,4 +173,42 @@ docker compose up -d
 # 2. Periksa status container
 docker compose ps
 ```
-Aplikasi dan Swagger UI akan langsung aktif di `http://localhost:6767/docs`.
+
+---
+
+## 🚢 Panduan Deploy ke VPS via GHCR (GitHub Container Registry)
+
+Setiap kali Anda melakukan `git push` ke branch `main`, GitHub Actions akan otomatis menguji kode, mem-build Docker Image, dan mem-publish-nya ke:
+```text
+ghcr.io/nylaam/mentoringbem-backend3.0:latest
+```
+
+### Cara Jalankan di VPS:
+
+1. **Siapkan file `.env` di VPS:**
+   Salin file [`.env.example`](file:///D:/Kuliah/be-mentoring/.env.example) menjadi `.env` di VPS Anda.
+
+2. **Login ke GHCR (jika repository bersifat private):**
+   ```bash
+   echo $CR_PAT | docker login ghcr.io -u <github-username> --password-stdin
+   ```
+   *(Jika package dibuat public di GitHub Packages Settings, langkah login ini tidak diperlukan).*
+
+3. **Tarik Image & Jalankan dengan Docker Compose:**
+   ```bash
+   # Jalankan menggunakan docker-compose.prod.yml
+   docker compose -f docker-compose.prod.yml pull
+   docker compose -f docker-compose.prod.yml up -d
+   ```
+
+4. **Atau jalankan langsung dengan Docker Run:**
+   ```bash
+   docker run -d \
+     --name toko-api \
+     --restart always \
+     -p 6767:6767 \
+     --env-file .env \
+     ghcr.io/nylaam/mentoringbem-backend3.0:latest
+   ```
+
+Aplikasi dan Swagger UI akan langsung aktif di `http://<ip-vps-anda>:6767/docs`!
