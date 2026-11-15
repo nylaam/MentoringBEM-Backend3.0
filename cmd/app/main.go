@@ -71,7 +71,7 @@ func main() {
 		return response.JSONSuccess(c, fiber.StatusOK, fiber.Map{
 			"message": "Selamat datang di Toko Backend Product API (Mentoring & Workshop)",
 			"health":  "/healthz",
-			"swagger": "/docs",
+			"docs":    "/docs",
 			"api":     "/api/v1/products",
 			"version": "1.0.0",
 		})
@@ -92,7 +92,7 @@ func main() {
 	})
 
 	// 7. Route Registration
-	// Register Swagger UI Documentation (/docs & /swagger) dengan proteksi Basic Auth
+	// Register Swagger UI Documentation tunggal (/docs) dengan proteksi Basic Auth
 	docs.RegisterSwaggerRoutes(app, cfg.SwaggerUser, cfg.SwaggerPassword)
 	log.Printf("[Docs] Swagger UI aktif di http://localhost%s/docs (User: %s, Basic Auth Password Protected)\n", fmt.Sprintf(":%s", cfg.AppPort), cfg.SwaggerUser)
 

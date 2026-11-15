@@ -4,7 +4,7 @@ Dokumentasi REST API resmi untuk studi kasus **Toko Backend Product Service** (G
 API ini dirancang siap deploy (Docker / Cloud PaaS) dan siap dikonsumsi langsung oleh tim **Frontend (FE)** untuk workshop atau mentoring.
 
 - **Base URL:** `http://localhost:6767`
-- **Interactive Swagger UI:** [`http://localhost:6767/docs`](http://localhost:6767/docs) (atau alias [`http://localhost:6767/swagger`](http://localhost:6767/swagger))
+- **Interactive Swagger UI:** [`http://localhost:6767/docs`](http://localhost:6767/docs)
   - **Proteksi Password (HTTP Basic Auth):**
     - **Username:** `admin` *(dapat diubah di `.env`: `SWAGGER_USER`)*
     - **Password:** `admin123` *(dapat diubah di `.env`: `SWAGGER_PASSWORD`)*
@@ -23,7 +23,7 @@ API ini dirancang siap deploy (Docker / Cloud PaaS) dan siap dikonsumsi langsung
 
 ## 📖 Cara Membuka Swagger UI di Browser
 
-1. Buka browser dan arahkan ke: **`http://localhost:6767/docs`** (atau `http://localhost:6767/swagger`).
+1. Buka browser dan arahkan ke alamat tunggal: **`http://localhost:6767/docs`**.
 2. Browser akan memunculkan dialog popup login (**HTTP Basic Auth**).
 3. Masukkan akun:
    - **Username:** `admin`
@@ -41,7 +41,6 @@ API ini dirancang siap deploy (Docker / Cloud PaaS) dan siap dikonsumsi langsung
 | `GET` | `/healthz` | Health check server & database | Public |
 | `GET` | `/docs` | Interactive Swagger UI Dashboard | **Basic Auth (admin/admin123)** |
 | `GET` | `/docs/openapi.json` | OpenAPI 3.0 Specification JSON | **Basic Auth (admin/admin123)** |
-| `GET` | `/swagger` | Alias redirect ke `/docs` | Public -> Basic Auth |
 | `GET` | `/api/v1/products` | Ambil seluruh daftar produk | **API Key** |
 | `GET` | `/api/v1/products/:id` | Ambil detail satu produk by ID | **API Key** |
 | `POST` | `/api/v1/products` | Tambah produk baru (wajib: name, price, stock) | **API Key** |
@@ -54,7 +53,7 @@ API ini dirancang siap deploy (Docker / Cloud PaaS) dan siap dikonsumsi langsung
 ## 1. System Health & Info (Public Endpoints)
 
 ### `GET /`
-Menampilkan pesan selamat datang, status, link swagger, dan endpoint utama.
+Menampilkan pesan selamat datang, status, link docs, dan endpoint utama.
 
 **cURL:**
 ```bash
@@ -67,9 +66,9 @@ curl -X GET http://localhost:6767/
   "success": true,
   "data": {
     "api": "/api/v1/products",
+    "docs": "/docs",
     "health": "/healthz",
     "message": "Selamat datang di Toko Backend Product API (Mentoring & Workshop)",
-    "swagger": "/docs",
     "version": "1.0.0"
   }
 }

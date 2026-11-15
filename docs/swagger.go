@@ -47,7 +47,7 @@ const swaggerUIHTML = `<!DOCTYPE html>
 </body>
 </html>`
 
-// RegisterSwaggerRoutes mendaftarkan endpoint Swagger UI dan spesifikasi OpenAPI dengan proteksi Basic Auth.
+// RegisterSwaggerRoutes mendaftarkan endpoint tunggal Swagger UI dan spesifikasi OpenAPI dengan proteksi Basic Auth.
 func RegisterSwaggerRoutes(router fiber.Router, username, password string) {
 	docsGroup := router.Group("/docs", basicauth.New(basicauth.Config{
 		Users: map[string]string{
@@ -69,13 +69,5 @@ func RegisterSwaggerRoutes(router fiber.Router, username, password string) {
 	docsGroup.Get("/openapi.json", func(c fiber.Ctx) error {
 		c.Set("Content-Type", "application/json")
 		return c.Send(OpenAPISpec)
-	})
-
-	// Redirect /swagger ke /docs
-	router.Get("/swagger", func(c fiber.Ctx) error {
-		return c.Redirect().To("/docs")
-	})
-	router.Get("/swagger/*", func(c fiber.Ctx) error {
-		return c.Redirect().To("/docs")
 	})
 }

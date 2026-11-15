@@ -81,13 +81,3 @@ func TestSwagger_OpenAPISpec_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "3.0.3", specMap["openapi"])
 }
-
-func TestSwagger_Redirect(t *testing.T) {
-	app := setupSwaggerTestApp("admin", "admin123")
-
-	req := httptest.NewRequest(http.MethodGet, "/swagger", nil)
-	resp, err := app.Test(req)
-	assert.NoError(t, err)
-	assert.Equal(t, fiber.StatusFound, resp.StatusCode)
-	assert.Equal(t, "/docs", resp.Header.Get("Location"))
-}

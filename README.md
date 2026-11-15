@@ -3,14 +3,14 @@
 Repositori ini adalah bahan praktik **Hands-on Mentoring & Workshop** untuk materi:
 > **"Building Production-Ready Backend with Go Fiber, Clean Architecture & DDD"**
 
-Proyek ini dibangun menggunakan **Go**, framework modern **Go Fiber v3**, arsitektur bersih **Clean Architecture & Domain-Driven Design (DDD)**, serta fokus terisolasi pada **Domain Product** (CRUD lengkap + **PATCH** untuk pembaruan cepat/kecil). API ini sudah dilengkapi **Interactive Swagger UI (Password-Protected)**, **CORS**, validasi ketat, autentikasi **API Key**, port default **6767**, dan siap dideploy langsung via Docker untuk dikonsumsi oleh tim **Frontend (FE)**.
+Proyek ini dibangun menggunakan **Go**, framework modern **Go Fiber v3**, arsitektur bersih **Clean Architecture & Domain-Driven Design (DDD)**, serta fokus terisolasi pada **Domain Product** (CRUD lengkap + **PATCH** untuk pembaruan cepat/kecil). API ini sudah dilengkapi **Interactive Swagger UI (Password-Protected)** di alamat tunggal `/docs`, **CORS**, validasi ketat, autentikasi **API Key**, port default **6767**, dan siap dideploy langsung via Docker untuk dikonsumsi oleh tim **Frontend (FE)**.
 
 ---
 
 ## 📖 Akses Swagger UI di Browser
 
-Swagger UI interaktif tersedia di:
-- **URL:** [`http://localhost:6767/docs`](http://localhost:6767/docs) (atau [`http://localhost:6767/swagger`](http://localhost:6767/swagger))
+Swagger UI interaktif tersedia di alamat tunggal:
+- **URL:** [`http://localhost:6767/docs`](http://localhost:6767/docs)
 - **Autentikasi (HTTP Basic Auth):**
   - **Username:** `admin` *(konfigurasi di `.env`: `SWAGGER_USER`)*
   - **Password:** `admin123` *(konfigurasi di `.env`: `SWAGGER_PASSWORD`)*
@@ -37,7 +37,7 @@ be-mentoring/
 │   ├── api.md                   # Dokumentasi REST API lengkap, schema & cURL
 │   ├── openapi.json             # OpenAPI 3.0.3 Specification (Port 6767)
 │   ├── spec.go                  # Embedded OpenAPI JSON ke dalam binary (//go:embed)
-│   ├── swagger.go               # Swagger UI Handler & Basic Auth Router
+│   ├── swagger.go               # Swagger UI Handler & Basic Auth Router (/docs)
 │   └── apidog_collection.json   # Koleksi Postman / Apidog siap import
 ├── domain/                      # Core Domain Layer (Pure Go, 0 external framework)
 │   ├── contracts/               # Interface Repository & Service
@@ -112,7 +112,6 @@ be-mentoring/
 | `GET` | `/healthz` | Health check server & database | Public |
 | `GET` | `/docs` | Swagger UI Interactive API Docs | **Basic Auth** (`admin` / `admin123`) |
 | `GET` | `/docs/openapi.json` | OpenAPI 3.0.3 Specification JSON | **Basic Auth** (`admin` / `admin123`) |
-| `GET` | `/swagger` | Alias redirect ke `/docs` | Public -> Basic Auth |
 | `GET` | `/api/v1/products` | Ambil semua produk | **API Key** |
 | `GET` | `/api/v1/products/:id` | Ambil detail produk by ID | **API Key** |
 | `POST` | `/api/v1/products` | Tambah produk baru | **API Key** |
