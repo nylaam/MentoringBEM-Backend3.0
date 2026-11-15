@@ -80,7 +80,7 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '8743' }}
           DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH || '/home/bem/MentoringBEM-Backend3.0' }}
         run: |
           if [ -z "$VPS_HOST" ] || [ -z "$VPS_USER" ] || [ -z "$VPS_KEY" ]; then
