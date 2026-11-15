@@ -7,8 +7,9 @@ services:
     env_file:
       - .env
     environment:
-      # Di dalam jaringan Docker, host database mengarah ke container 'db'
+      # Di dalam jaringan Docker, host database mengarah ke container 'db' pada port internal 5432
       - DATABASE_HOST=db
+      - DATABASE_PORT=5432
     depends_on:
       db:
         condition: service_healthy
@@ -22,8 +23,9 @@ services:
       - POSTGRES_USER=${DATABASE_USER:-postgres}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-postgres}
       - POSTGRES_DB=${DATABASE_NAME:-toko_db}
-    expose:
-      - "5432"
+    ports:
+      # Port 5434 di host VPS diarahkan ke port 5432 di dalam container
+      - "${DATABASE_HOST_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
